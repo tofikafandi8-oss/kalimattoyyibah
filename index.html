@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Taman Kalimat Toyyibah - Belajar Bersama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Library untuk kembang api -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Quicksand:wght@700&display=swap');
+
+        :root {
+            --p1-color: #10b981;
+            --p2-color: #84cc16;
+            --bg-light-green: #f0fdf4;
+            --border-green: #064e3b;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg-light-green);
+            background-image: radial-gradient(var(--p1-color) 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pop-title {
+            font-family: 'Bangers', cursive;
+            letter-spacing: 2px;
+            text-shadow: 4px 4px 0px var(--border-green);
+            -webkit-text-stroke: 1px var(--border-green);
+            color: white;
+        }
+
+        .pop-card {
+            background: white;
+            border: 4px solid var(--border-green);
+            box-shadow: 10px 10px 0px var(--border-green);
+            border-radius: 12px;
+        }
+
+        .pop-btn {
+            border: 3px solid var(--border-green);
+            box-shadow: 4px 4px 0px var(--border-green);
+            transition: all 0.1s;
+            position: relative;
+            border-radius: 8px;
+        }
+
+        .pop-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--border-green);
+        }
+
+        .hidden { display: none !important; }
+
+        .duel-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            background: var(--border-green);
+            position: relative;
+        }
+
+        .player-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        #p1-side { 
+            background-color: var(--p1-color); 
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20L0 40V0L20 20zM20 20L40 0V40L20 20z' fill='%23059669' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+            border-right: 2px solid white;
+        }
+        #p2-side { 
+            background-color: var(--p2-color); 
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20L0 40V0L20 20zM20 20L40 0V40L20 20z' fill='%2365a30d' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+            border-left: 2px solid white;
+        }
+
+        .tug-of-war-overlay {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            transform: translateY(-50%);
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .rope {
+            height: 12px;
+            background: #d97706; 
+            width: 100%;
+            border-top: 3px solid var(--border-green);
+            border-bottom: 3px solid var(--border-green);
+            position: absolute;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .rope-flag {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 90px;
+            background: #fef08a; 
+            border: 4px solid var(--border-green);
+            box-shadow: 6px 6px 0px var(--border-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Bangers';
+            font-size: 28px;
+            color: var(--border-green);
+            z-index: 20;
+            transition: left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 4px;
+        }
+
+        .center-marker {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: white;
+            opacity: 0.5;
+            transform: translateX(-50%);
+            z-index: 5;
+        }
+
+        .question-bubble {
+            background: white;
+            border: 3px solid var(--border-green);
+            box-shadow: 6px 6px 0px var(--border-green);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 15px;
+        }
+
+        .power-bar-container {
+            width: 100%;
+            height: 24px;
+            background: rgba(0,0,0,0.2);
+            border: 2px solid white;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .power-bar {
+            height: 100%;
+            transition: width 0.4s ease-out;
+            background-color: white;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake-effect { animation: shake 0.2s ease-in-out; }
+
+        @keyframes float-thumb {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.2); }
+        }
+        .animate-thumb { animation: float-thumb 1.5s infinite ease-in-out; }
+
+        .flash-red { background-color: #fca5a5 !important; transition: background 0.2s; }
+        .flash-green { background-color: #86efac !important; transition: background 0.2s; }
+
+        .control-btns {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .mini-btn {
+            background: white;
+            border: 2px solid var(--border-green);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 3px 3px 0px var(--border-green);
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .mini-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px var(--border-green); }
+    </style>
+</head>
+<body>
+
+    <!-- Tombol Kontrol Global -->
+    <div class="control-btns">
+        <button id="home-btn" onclick="exitToMenu()" class="mini-btn hidden" title="Menu Utama">🏠</button>
+        <button onclick="toggleFullScreen()" class="mini-btn" title="Layar Penuh">⛶</button>
+    </div>
+
+    <!-- MENU UTAMA -->
+    <div id="main-menu" class="max-w-md w-full pop-card p-8 text-center mx-4 transform rotate-1">
+        <div class="mb-4 text-emerald-600 text-5xl">🕌</div>
+        <h1 class="text-6xl pop-title mb-2" style="color: #059669;">MARI BELAJAR!</h1>
+        <h2 class="text-xl text-emerald-800 font-bold mb-8 uppercase tracking-tight">Kuis Adab Kalimat Toyyibah</h2>
+        
+        <div class="grid gap-4">
+            <button onclick="startSolo()" class="pop-btn bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-4 rounded-lg text-xl italic">
+                Mode Santri Mandiri
+            </button>
+            <button onclick="startDuel()" class="pop-btn bg-lime-500 hover:bg-lime-400 text-white font-bold py-4 rounded-lg text-xl italic">
+                Mode Kerja Sama (Duel)
+            </button>
+        </div>
+        <p class="mt-6 text-sm text-emerald-700 italic font-semibold">"Sampaikanlah dariku walau satu ayat"</p>
+    </div>
+
+    <!-- MODE SOLO -->
+    <div id="solo-game" class="max-w-xl w-full h-[85vh] pop-card flex flex-col hidden mx-4 overflow-hidden bg-emerald-50">
+        <div class="p-4 border-b-4 border-emerald-900 flex justify-between items-center bg-white">
+            <div class="font-bold text-emerald-900">MODE MANDIRI</div>
+            <div class="flex gap-2">
+                <div class="bg-yellow-100 border-2 border-emerald-900 px-2 font-bold text-emerald-900">POIN: <span id="solo-score">0</span></div>
+                <div class="bg-emerald-100 border-2 border-emerald-900 px-2 font-bold text-emerald-900"><span id="solo-level">1</span>/10</div>
+            </div>
+        </div>
+        <div class="flex-grow flex flex-col p-6 overflow-y-auto">
+            <div class="question-bubble transform -rotate-1">
+                <h2 id="solo-question" class="text-lg font-bold text-center text-emerald-900">...</h2>
+            </div>
+            <div id="solo-options" class="grid grid-cols-1 gap-3"></div>
+        </div>
+    </div>
+
+    <!-- MODE DUEL -->
+    <div id="duel-game" class="duel-container hidden">
+        <div class="tug-of-war-overlay">
+            <div class="center-marker"></div>
+            <div id="tug-rope" class="rope"></div>
+            <div id="rope-flag" class="rope-flag">ILMU</div>
+        </div>
+
+        <!-- Player 1 -->
+        <div id="p1-side" class="player-area">
+            <div class="flex justify-between items-center mb-4">
+                <div class="pop-title text-3xl">SANTRI 1</div>
+                <div class="bg-white/90 border-2 border-emerald-900 px-3 py-1 font-bold text-emerald-900 rounded-full text-xs shadow-sm"><span id="p1-points">50</span>%</div>
+            </div>
+            <div class="power-bar-container"><div id="p1-bar" class="power-bar" style="width: 50%"></div></div>
+            
+            <div class="flex-grow flex flex-col justify-end pb-24 md:pb-32">
+                <div id="p1-bubble" class="question-bubble transform -rotate-1">
+                    <p id="p1-question" class="text-sm font-bold text-center text-emerald-900">...</p>
+                </div>
+                <div id="p1-options" class="grid grid-cols-2 gap-2"></div>
+            </div>
+        </div>
+
+        <!-- Player 2 -->
+        <div id="p2-side" class="player-area text-right">
+            <div class="flex justify-between items-center mb-4 flex-row-reverse">
+                <div class="pop-title text-3xl">SANTRI 2</div>
+                <div class="bg-white/90 border-2 border-emerald-900 px-3 py-1 font-bold text-emerald-900 rounded-full text-xs shadow-sm"><span id="p2-points">50</span>%</div>
+            </div>
+            <div class="power-bar-container"><div id="p2-bar" class="power-bar float-right" style="width: 50%"></div></div>
+            
+            <div class="flex-grow flex flex-col justify-end pb-24 md:pb-32">
+                <div id="p2-bubble" class="question-bubble transform rotate-1 text-left">
+                    <p id="p2-question" class="text-sm font-bold text-center text-emerald-900">...</p>
+                </div>
+                <div id="p2-options" class="grid grid-cols-2 gap-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HASIL AKHIR -->
+    <div id="result-screen" class="max-w-sm w-full pop-card p-8 text-center hidden mx-4 bg-emerald-50 border-8 border-emerald-900 z-50">
+        <div id="result-emoji" class="text-7xl mb-4 animate-thumb">👍</div>
+        <h2 id="result-title" class="text-4xl pop-title mb-2 !text-emerald-700 uppercase">ALHAMDULILLAH!</h2>
+        <p id="result-body" class="text-xl font-bold mb-8 text-emerald-900 uppercase italic"></p>
+        <button onclick="exitToMenu()" class="w-full pop-btn bg-emerald-600 text-white font-bold py-5 text-xl tracking-wider hover:bg-emerald-700">MULAI LAGI</button>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'wrong') {
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'win') {
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    osc.connect(g); g.connect(audioCtx.destination);
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (i * 0.1));
+                    g.gain.setValueAtTime(0.2, audioCtx.currentTime + (i * 0.1));
+                    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (i * 0.1) + 0.4);
+                    osc.start(audioCtx.currentTime + (i * 0.1)); osc.stop(audioCtx.currentTime + (i * 0.1) + 0.4);
+                });
+            }
+        }
+
+        // FULLSCREEN LOGIC
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // FIREWORKS LOGIC
+        function launchFireworks() {
+            var duration = 5 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) {
+              return Math.random() * (max - min) + min;
+            }
+
+            var interval = setInterval(function() {
+              var timeLeft = animationEnd - Date.now();
+              if (timeLeft <= 0) return clearInterval(interval);
+
+              var particleCount = 50 * (timeLeft / duration);
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        const fixedOptions = ["Subhanallah", "Masya Allah", "Insya Allah", "Allahu Akbar"];
+        const baseQuestions = [
+            { q: "Melihat pemandangan alam yang begitu menakjubkan ciptaan Allah?", a: "Subhanallah" },
+            { q: "Ketika kita berniat melakukan kebaikan di waktu yang akan datang?", a: "Insya Allah" },
+            { q: "Melihat keberhasilan atau harta benda yang luar biasa milik orang lain?", a: "Masya Allah" },
+            { q: "Kalimat yang diucapkan untuk mengagungkan kebesaran Allah?", a: "Allahu Akbar" },
+            { q: "Saat melihat kejadian buruk atau aneh untuk menyucikan Allah?", a: "Subhanallah" },
+            { q: "Mengungkapkan kekaguman atas sesuatu karena kehendak Allah?", a: "Masya Allah" },
+            { q: "Diucapkan ketika muadzin menyerukan panggilan shalat?", a: "Allahu Akbar" },
+            { q: "Janji seorang hamba yang menggantungkan harapannya pada Allah?", a: "Insya Allah" },
+            { q: "Melihat kecerdasan anak yang luar biasa, kita berucap?", a: "Masya Allah" },
+            { q: "Melihat petir atau fenomena alam yang dahsyat?", a: "Subhanallah" }
+        ];
+
+        let soloIndex = 0, soloScore = 0;
+        let p1Tug = 50, p2Tug = 50;
+        let isGameOver = false;
+        let p1DuelData = { questions: [], index: 0 };
+        let p2DuelData = { questions: [], index: 0 };
+
+        function exitToMenu() {
+            isGameOver = false;
+            document.querySelectorAll('body > div').forEach(div => {
+                if(!div.classList.contains('control-btns')) div.classList.add('hidden');
+            });
+            document.getElementById('main-menu').classList.remove('hidden');
+            document.getElementById('home-btn').classList.add('hidden');
+        }
+
+        function shuffle(array) {
+            return [...array].sort(() => Math.random() - 0.5);
+        }
+
+        function startSolo() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            soloIndex = 0; soloScore = 0;
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('solo-game').classList.remove('hidden');
+            document.getElementById('home-btn').classList.remove('hidden');
+            renderSolo();
+        }
+
+        function renderSolo() {
+            if (soloIndex >= baseQuestions.length) {
+                playSound('win');
+                launchFireworks();
+                showResult(`TOTAL POIN: ${soloScore}`, "Maa Syaa Allah!");
+                return;
+            }
+            const q = baseQuestions[soloIndex];
+            document.getElementById('solo-level').innerText = soloIndex + 1;
+            document.getElementById('solo-score').innerText = soloScore;
+            document.getElementById('solo-question').innerText = q.q;
+            
+            const optCont = document.getElementById('solo-options');
+            optCont.innerHTML = '';
+            const shuffledOptions = shuffle(fixedOptions);
+            
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "pop-btn bg-white p-4 font-bold text-lg text-emerald-900 hover:bg-emerald-100 transition-colors";
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    if (opt === q.a) { soloScore += 10; playSound('correct'); } 
+                    else { playSound('wrong'); }
+                    soloIndex++; renderSolo();
+                };
+                optCont.appendChild(btn);
+            });
+        }
+
+        function startDuel() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            isGameOver = false;
+            p1Tug = 50; p2Tug = 50;
+            p1DuelData = { questions: shuffle(baseQuestions), index: 0 };
+            p2DuelData = { questions: shuffle(baseQuestions), index: 0 };
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('duel-game').classList.remove('hidden');
+            document.getElementById('home-btn').classList.remove('hidden');
+            updateTugVisuals();
+            renderPlayerSide('p1'); renderPlayerSide('p2');
+        }
+
+        function renderPlayerSide(playerId) {
+            if (isGameOver) return;
+            const data = (playerId === 'p1') ? p1DuelData : p2DuelData;
+            if (data.index >= data.questions.length) {
+                data.questions = shuffle(baseQuestions); data.index = 0;
+            }
+            const q = data.questions[data.index];
+            document.getElementById(`${playerId}-question`).innerText = q.q;
+            const optCont = document.getElementById(`${playerId}-options`);
+            optCont.innerHTML = '';
+            const shuffledOptions = shuffle(fixedOptions);
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "pop-btn bg-white p-2 md:p-3 font-bold text-xs text-emerald-900 hover:bg-emerald-50 transition-colors";
+                btn.innerText = opt;
+                btn.onclick = () => handleDuelTug(playerId, opt, q.a);
+                optCont.appendChild(btn);
+            });
+        }
+
+        function handleDuelTug(playerId, choice, correctAns) {
+            if (isGameOver) return;
+            const pullPower = 10, penalty = 8;    
+            const bubble = document.getElementById(`${playerId}-bubble`);
+            if (choice === correctAns) {
+                playSound('correct');
+                if (playerId === 'p1') { p1Tug += pullPower; p2Tug -= pullPower; } 
+                else { p2Tug += pullPower; p1Tug -= pullPower; }
+                bubble.classList.add('flash-green');
+                setTimeout(() => bubble.classList.remove('flash-green'), 300);
+            } else {
+                playSound('wrong');
+                if (playerId === 'p1') { p1Tug -= penalty; p2Tug += penalty; } 
+                else { p2Tug -= penalty; p1Tug += penalty; }
+                bubble.classList.add('shake-effect', 'flash-red');
+                setTimeout(() => bubble.classList.remove('shake-effect', 'flash-red'), 300);
+            }
+            p1Tug = Math.max(0, Math.min(100, p1Tug));
+            p2Tug = Math.max(0, Math.min(100, p2Tug));
+            updateTugVisuals();
+            if (playerId === 'p1') p1DuelData.index++; else p2DuelData.index++;
+            renderPlayerSide(playerId); checkDuelEnd();
+        }
+
+        function checkDuelEnd() {
+            if (isGameOver) return;
+            if (p1Tug >= 100 || p2Tug <= 0) { 
+                isGameOver = true; playSound('win'); launchFireworks();
+                showResult("SANTRI 1 UNGGUL!", "BARAKALLAH!"); return; 
+            }
+            if (p2Tug >= 100 || p1Tug <= 0) { 
+                isGameOver = true; playSound('win'); launchFireworks();
+                showResult("SANTRI 2 UNGGUL!", "BARAKALLAH!"); return; 
+            }
+        }
+
+        function updateTugVisuals() {
+            document.getElementById('p1-bar').style.width = p1Tug + "%";
+            document.getElementById('p2-bar').style.width = p2Tug + "%";
+            document.getElementById('p1-points').innerText = Math.round(p1Tug);
+            document.getElementById('p2-points').innerText = Math.round(p2Tug);
+            document.getElementById('rope-flag').style.left = p2Tug + "%";
+        }
+
+        function showResult(body, title) {
+            document.querySelectorAll('body > div').forEach(div => {
+                if(!div.classList.contains('control-btns')) div.classList.add('hidden');
+            });
+            const res = document.getElementById('result-screen');
+            res.classList.remove('hidden');
+            document.getElementById('result-title').innerText = title;
+            document.getElementById('result-body').innerText = body;
+        }
+    </script>
+</body>
+</html>
